@@ -4,6 +4,7 @@ import '../consts.dart';
 import 'package:intl/intl.dart';
 import '../services/weatherApi.dart';
 import 'SelectCity.dart';
+import '../model/model.dart';
 
 class HomePage extends StatefulWidget {
   String cityName;
@@ -15,9 +16,10 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   bool isBlurred = false;
-  final WeatherService weatherService = WeatherService(
-      apiKey: OPENWEATHER_API_KEY); // OpenWeatherMap API anahtarı
-  Map<String, dynamic>? _weatherData; // Hava durumu verilerini tutacak değişken
+  final WeatherService weatherService =
+      WeatherService(apiKey: OPENWEATHER_API_KEY);
+  Weather? _weatherData;
+
   @override
   void initState() {
     super.initState();
@@ -25,11 +27,13 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
   }
 
+  @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
+  @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       fetchWeatherForCity(widget.cityName);
@@ -43,7 +47,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   }
 
   Future<void> fetchWeatherForCity(String city) async {
-    final data = await weatherService.fetchWeather(city); // Servisi çağırıyoruz
+    final Weather? data = await weatherService.fetchWeather(city);
     setState(() {
       _weatherData = data;
     });
@@ -111,15 +115,14 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
   Widget locationHeader() {
     return Row(
-      mainAxisAlignment:
-          MainAxisAlignment.spaceBetween, // Elemanları sağa ve sola sabitler
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Expanded(
           child: Padding(
             padding: EdgeInsets.only(left: 63),
             child: Center(
               child: Text(
-                _weatherData?['name'] ?? "",
+                _weatherData?.name ?? "",
                 style:
                     const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
@@ -148,7 +151,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   }
 
   Widget dateTimeInfo() {
-    DateTime now = DateTime.now(); // Güncel tarih ve saat bilgisi
+    DateTime now = DateTime.now();
 
     return Column(children: [
       Text(
@@ -175,8 +178,8 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   }
 
   Widget weatherIcon() {
-    String? iconCode = _weatherData?['weather'][0]['icon'];
-    String? description = _weatherData?['weather'][0]['description'];
+    String? iconCode = _weatherData?.weather[0].icon;
+    String? description = _weatherData?.weather[0].description;
 
     return Column(
       children: [
@@ -199,20 +202,13 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   }
 
   Widget currentTemperature() {
-    double? temp = _weatherData?['main']['temp'];
-
     return Text(
-      "${temp?.round()}°C",
+      "${_weatherData?.main.temp.round()}°C",
       style: const TextStyle(fontSize: 90, fontWeight: FontWeight.bold),
     );
   }
 
   Widget extraInfo() {
-    double? tempMax = _weatherData?['main']['temp_max'];
-    double? tempMin = _weatherData?['main']['temp_min'];
-    int? humidity = _weatherData?['main']['humidity'];
-    double? windSpeed = _weatherData?['wind']['speed'];
-
     return Container(
       height: MediaQuery.sizeOf(context).height * 0.15,
       width: MediaQuery.sizeOf(context).width * 0.8,
@@ -227,23 +223,19 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisSize: MainAxisSize.max,
             children: [
-              Text("Max: ${tempMax?.round()}°C",
+              Text("Max: ${_weatherData?.main.tempMax.round()}°C",
                   style: const TextStyle(fontSize: 15, color: Colors.white)),
-              Text("Min: ${tempMin?.round()}°C",
+              Text("Min: ${_weatherData?.main.tempMin.round()}°C",
                   style: const TextStyle(fontSize: 15, color: Colors.white))
             ],
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisSize: MainAxisSize.max,
             children: [
-              Text("Humidity: ${humidity ?? ''}%",
+              Text("Humidity: ${_weatherData?.main.humidity ?? ''}%",
                   style: const TextStyle(fontSize: 15, color: Colors.white)),
-              Text("Wind: ${windSpeed?.toString()} km/h",
+              Text("Wind: ${_weatherData?.wind.speed.toString()} km/h",
                   style: const TextStyle(fontSize: 15, color: Colors.white))
             ],
           )
